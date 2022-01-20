@@ -21,14 +21,19 @@ type Ticket struct {
 	Owner  string `json:"owner"`
 }
 
+var ticketsArr []Ticket
+
 func main() {
 	fmt.Println("starting simpleapi")
+
+	ticketsArr = []Ticket{}
 
 	r := mux.NewRouter()
 	r.StrictSlash(true)
 
 	r.HandleFunc("/", HomeHandler)
 	r.HandleFunc("/ticket", TicketPostHandler).Methods("POST")
+	r.HandleFunc("/tickets", AllTicketsGetHandler).Methods("GET")
 
 	http.Handle("/", r)
 	log.Fatal(http.ListenAndServe(":8080", nil))
@@ -36,7 +41,7 @@ func main() {
 
 func TicketPostHandler(rw http.ResponseWriter, req *http.Request) {
 	reqBody, _ := ioutil.ReadAll(req.Body)
-	fmt.Printf("Handling ticket POST\n%+v\n", string(reqBody))
+	fmt.Printf("--- Handling POST Ticket ---\n%+v\n", string(reqBody))
 
 	var ticket Ticket
 	err := json.Unmarshal(reqBody, &ticket)
@@ -47,8 +52,16 @@ func TicketPostHandler(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	fmt.Println(ticket)
+	ticketsArr = append(ticketsArr, ticket)
+	json.NewEncoder(rw).Encode(ticket)
+}
+
+func AllTicketsGetHandler(rw http.ResponseWriter, req *http.Request) {
+	fmt.Println("--- Handling Get AllTickets ---")
+	json.NewEncoder(rw).Encode(ticketsArr)
 }
 
 func HomeHandler(rw http.ResponseWriter, req *http.Request) {
+	fmt.Println("--- Handling Home Page ---")
 	fmt.Fprintf(rw, "Hello World!")
 }
